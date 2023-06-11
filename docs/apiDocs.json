@@ -1,6 +1,6 @@
 {
-    "/api": "api docs",
-    "/api/signup": "signup",
-    "/api/signin": "signin",
-    "/api/signout": "signout"
+  "/api": "api docs",
+  "/api/signUp": "signUp",
+  "/api/signIn": "signIn",
+  "/api/signOut": "signOut"
 }
