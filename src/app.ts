@@ -10,7 +10,10 @@ import Auth from "./routes/auth.js";
 const app = express();
 config();
 
-connect(process.env.MONGO_URI, { useNewUrlParser: true })
+
+const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/voicex";
+
+connect(mongoURI)
   .then(() => console.log("DB Connected"))
   .catch((err) => console.log(`DB Connection Error: ${err.message}`));
 
