@@ -125,7 +125,7 @@ export const socialLogin = async (req: Request, res: Response) => {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
 
-    const { email, name, picture, sub: googleid }: any = ticket.getPayload();
+    const { email, name }: any = ticket.getPayload();
 
     let user = await findUserByEmail(email);
     if (!user) {
@@ -136,9 +136,6 @@ export const socialLogin = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ _id: user.id }, process.env.JWT_SECRET || "secret");
 
-    const options: CookieOptions = {
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    }
     res.cookie("voicex-auth-token", token, cookieOptions);
     return res.json({ id: user.id, name, email });
   } catch (error: any) {
