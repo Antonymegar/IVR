@@ -53,6 +53,25 @@ const findUserByEmail = async (email: string): Promise<User | null> => {
   }
 }
 
+const createUser = async (user: User) => {
+  try {
+    const col = database.collection<User>("users");
+    await col.insertOne(user);
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+export const updateUser = async (user: User) => {
+  try {
+    const col = database.collection<User>("users");
+    await col.updateOne({ id: user.id }, { $set: user });
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+
 const findUserById = async (id: string): Promise<User | null> => {
   try {
     const col = database.collection<User>("users");
@@ -63,16 +82,6 @@ const findUserById = async (id: string): Promise<User | null> => {
     return null;
   }
 }
-
-const createUser = async (user: User) => {
-  try {
-    const col = database.collection<User>("users");
-    await col.insertOne(user);
-  } catch (err) {
-    console.log(err);
-  }
-}
-
 
 
 
