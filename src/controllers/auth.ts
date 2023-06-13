@@ -15,10 +15,15 @@ const generateJWT = (id: string, email: string) => {
   return jwt.sign({ id, email }, secrete, { expiresIn: "30d", });
 }
 
-const verifyJWT = (token: string) => {
-  const secrete = process.env.JWT_SECRET || "secrete";
-  const payload = jwt.verify(token, secrete);
-  return !!payload;
+const decodeJWT = (token: string): { id: string, email: string } | null => {
+  try {
+    const secrete = process.env.JWT_SECRET || "secrete";
+    const payload = jwt.verify(token, secrete);
+    return payload as { id: string, email: string };
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
 }
 
 const cookieOptions: CookieOptions = {
@@ -48,7 +53,7 @@ export const auth = async (req: Request, res: Response, next: e.NextFunction) =>
     });
   }
 
-  const valid = verifyJWT(cookieToken);
+  const valid = decodeJWT(cookieToken);
   if (!valid) {
     return res.status(401).json({
       error: "Unauthorized, Invalid Token",
@@ -134,7 +139,7 @@ export const socialLogin = async (req: Request, res: Response) => {
       await createUser(user);
     }
 
-    const token = jwt.sign({ _id: user.id }, process.env.JWT_SECRET || "secret");
+    const token = generateJWT(user.id, user.email);
 
     res.cookie("voicex-auth-token", token, cookieOptions);
     return res.json({ id: user.id, name, email });
@@ -143,3 +148,40 @@ export const socialLogin = async (req: Request, res: Response) => {
     return res.status(400).json(error.message);
   }
 };
+
+
+export const VerifyEmail = async (req: Request, res: Response) => {
+  try {
+    const token = req.query.token as string;
+    if (!token) {
+      throw new Error("Token not found");
+    }
+
+    const verified = decodeJWT(token);
+    if (!verified) {
+      throw new Error("Invalid Token");
+    }
+
+    const { id, email } = verified;
+    const user = await findUserByEmail(email);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.verified) {
+      throw new Error("User already verified");
+    }
+
+    user.verified = true;
+    await createUser(user);
+
+    const authToken = generateJWT(user.id, user.email);
+    res.cookie("voicex-auth-token", authToken, cookieOptions);
+
+    return res.json({ id: user.id, name: user.name, email: user.email });
+
+  } catch (error: any) {
+    console.log(error);
+    return res.status(400).json(error.message);
+  }
+}
