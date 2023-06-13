@@ -21,7 +21,7 @@ const newUser = (name: string, email: string, password?: string): User => {
     id: userID,
     name,
     email,
-    password: encryptPassword(userID, password || "123456"),
+    password: hashPassword(userID, password || "123456"),
     created: new Date(),
     updated: new Date(),
     verified: false,
@@ -29,7 +29,7 @@ const newUser = (name: string, email: string, password?: string): User => {
 }
 
 
-const encryptPassword = (id: string, password: string): string => {
+export const hashPassword = (id: string, password: string): string => {
   if (!password) return "";
   try {
     return createHmac("sha1", id).update(password).digest("hex");
@@ -39,7 +39,7 @@ const encryptPassword = (id: string, password: string): string => {
 }
 
 const authenticate = (userID: string, plainText: string, hashed_password: string): boolean => {
-  return encryptPassword(userID, plainText) === hashed_password;
+  return hashPassword(userID, plainText) === hashed_password;
 }
 
 const findUserByEmail = async (email: string): Promise<User | null> => {
