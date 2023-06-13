@@ -1,11 +1,9 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import crypto from "crypto";
 import { sendEmail } from "../helpers/index.js";
-import Token from "../models/token.js";
-import { OAuth2Client, TokenPayload } from "google-auth-library";
+import { OAuth2Client } from "google-auth-library";
 import e, { Request, Response } from "express";
-import { User, authenticate, createUser, findUserByEmail, newUser } from "../models/user.js";
+import { User, authenticate, createUser, findUserByEmail, newUser, updateUser } from "../models/user.js";
 import { CookieOptions } from "express-serve-static-core";
 
 dotenv.config();
@@ -173,7 +171,7 @@ export const VerifyEmail = async (req: Request, res: Response) => {
     }
 
     user.verified = true;
-    await createUser(user);
+    await updateUser(user);
 
     const authToken = generateJWT(user.id, user.email);
     res.cookie("voicex-auth-token", authToken, cookieOptions);
