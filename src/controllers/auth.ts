@@ -65,21 +65,22 @@ const sentPasswordResetEmail = async (user: User) => {
 }
 
 export const auth = async (req: Request, res: Response, next: e.NextFunction) => {
-  const cookieToken = req.cookies["voicex-auth-token"];
-  if (!cookieToken) {
-    return res.status(401).json({
-      error: "Unauthorized, no cookie",
-    });
-  }
+  try {
+    const cookieToken = req.cookies["voicex-auth-token"];
+    if (!cookieToken) {
+      throw new Error("Unauthorized, no cookie");
+    }
 
-  const valid = decodeJWT(cookieToken);
-  if (!valid) {
-    return res.status(401).json({
-      error: "Unauthorized, Invalid Token",
-    });
-  }
+    const valid = decodeJWT(cookieToken);
+    if (!valid) {
+      throw new Error("Unauthorized, Invalid Token");
+    }
 
-  next();
+    next();
+  } catch (error: any) {
+    console.log(error);
+    res.status(401).send(error.message);
+  }
 }
 
 
@@ -95,12 +96,10 @@ export const signUp = async (req: Request, res: Response) => {
     await createUser(user);
 
     await sendVerificationEmail(user);
-    res
-      .status(200)
-      .send({ message: "An Email sent to your account please verify" });
+    res.send({ message: "An Email sent to your account please verify" });
   } catch (error: any) {
     console.log(error);
-    return res.status(400).json(error.message);
+    res.status(400).send(error.message);
   }
 };
 
@@ -127,10 +126,10 @@ export const signIn = async (req: Request, res: Response) => {
 
     res.cookie("voicex-auth-token", token, cookieOptions);
 
-    res.status(200).json({ id, name, email });
+    res.send({ id: user.id, name: user.name, email: user.email });
   } catch (error: any) {
     console.log(error);
-    return res.status(400).json(error.message);
+    res.status(400).send(error.message);
   }
 };
 
@@ -142,12 +141,10 @@ export const forgotPassword = async (req: Request, res: Response) => {
       throw new Error("User with email does not exist.Please SignUp");
     }
     sentPasswordResetEmail(user);
-    res
-      .status(200)
-      .send({ message: "Check email for password reset link" });
+    res.send({ message: "Check email for password reset link" });
   } catch (error: any) {
     console.log(error);
-    return res.status(400).json(error.message);
+    res.status(400).send(error.message);
   }
 }
 
@@ -167,18 +164,16 @@ export const changePassword = async (req: Request, res: Response) => {
 
     user.password = hashPassword(user.id, newPassword)
     await updateUser(user);
-    res
-      .status(200)
-      .send({ message: "Password changed successfully" });
+    res.send({ message: "Password changed successfully" });
   } catch (error: any) {
     console.log(error);
-    return res.status(400).json(error.message);
+    res.status(400).send(error.message);
   }
 }
 
 export const signOut = (req: Request, res: Response) => {
   res.clearCookie("voicex");
-  return res.json("Sign Out success!");
+  res.send("Sign Out success!");
 };
 
 
@@ -203,10 +198,10 @@ export const socialLogin = async (req: Request, res: Response) => {
     const token = generateJWT(user.id, user.email);
 
     res.cookie("voicex-auth-token", token, cookieOptions);
-    return res.json({ id: user.id, name, email });
+    res.send({ id: user.id, name: user.name, email: user.email });
   } catch (error: any) {
     console.log(error);
-    return res.status(400).json(error.message);
+    res.status(400).send(error.message);
   }
 };
 
@@ -239,10 +234,10 @@ export const VerifyEmail = async (req: Request, res: Response) => {
     const authToken = generateJWT(user.id, user.email);
     res.cookie("voicex-auth-token", authToken, cookieOptions);
 
-    return res.json({ id: user.id, name: user.name, email: user.email });
+    res.send({ id: user.id, name: user.name, email: user.email });
 
   } catch (error: any) {
     console.log(error);
-    return res.status(400).json(error.message);
+    res.status(400).send(error.message);
   }
 }
